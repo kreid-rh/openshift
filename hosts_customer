@@ -1,0 +1,93 @@
+[OSEv3:vars]
+
+###########################################################################
+### Ansible Vars
+###########################################################################
+timeout=60
+ansible_become=yes
+ansible_ssh_user=ec2-user
+deployment_type=openshift-enterprise
+openshift_release=v3.6
+openshift_image_tag=v3.6.0
+openshift_pkg_version=-3.6.0
+openshift_router_selector='env=infra'
+openshift_registry_selector='env=infra'
+
+osm_default_node_selector='env=app'
+
+#MasterVars
+openshift_master_api_port=443
+openshift_master_console_port=443
+
+openshift_master_cluster_hostname=loadbalancer.rdu10.internal
+openshift_master_public_hostname=loadbalancer.rdu10.example.opentlc.com
+openshift_master_default_subdomain=*.apps.rdu10.example.opentlc.com
+openshift_set_hostname=true
+
+#Logging
+
+openshift_logging_install_logging=true
+openshift_logging_storage_kind=nfs
+openshift_logging_storage_access_modes=['ReadWriteOnce']
+openshift_logging_storage_host=support1.rdu10.internal
+openshift_logging_storage_nfs_directory=/srv/nfs
+openshift_logging_storage_volume_name=logging
+openshift_logging_storage_volume_size=10Gi
+
+#Metrics
+openshift_metrics_install_metrics=true
+openshift_metrics_storage_kind=nfs
+openshift_metrics_storage_access_modes=['ReadWriteOnce']
+openshift_metrics_storage_host=support1.rdu10.internal
+openshift_metrics_storage_nfs_directory=/srv/nfs
+openshift_metrics_storage_volume_name=metrics
+openshift_metrics_storage_volume_size=10Gi
+
+#Registry
+openshift_hosted_registry_storage_kind=nfs
+openshift_hosted_registry_storage_access_modes=['ReadWriteMany']
+openshift_hosted_registry_storage_host=support1.rdu10.internal
+openshift_hosted_registry_storage_nfs_directory=/srv/nfs
+openshift_hosted_registry_storage_volume_name=registry
+openshift_hosted_registry_storage_volume_size=10Gi
+
+	
+# disable memory check, as we are not a production environment
+openshift_disable_check="memory_availability"
+
+[OSEv3:children]
+lb
+masters
+etcd
+nodes
+nfs
+
+[lb]
+loadbalancer1.rdu10.internal 
+
+[masters]
+master1.rdu10.internal 
+master2.rdu10.internal 
+master3.rdu10.internal 
+
+[etcd]
+master1.rdu10.internal 
+master2.rdu10.internal 
+master3.rdu10.internal 
+
+[nodes]
+## These are the masters
+master1.rdu10.internal openshift_hostname=master1.rdu10.internal ansible_ssh_user=ec2-user ansible_ssh_private_key_file=~/.ssh/ocpkey.pem openshift_node_labels="{'logging':'true','openshift_schedulable':'False','cluster': 'rdu10', 'zone': 'us-east-1c'}"
+master2.rdu10.internal openshift_hostname=master2.rdu10.internal ansible_ssh_user=ec2-user ansible_ssh_private_key_file=~/.ssh/ocpkey.pem openshift_node_labels="{'logging':'true','openshift_schedulable':'False','cluster': 'rdu10', 'zone': 'us-east-1c'}"
+master3.rdu10.internal openshift_hostname=master3.rdu10.internal ansible_ssh_user=ec2-user ansible_ssh_private_key_file=~/.ssh/ocpkey.pem openshift_node_labels="{'logging':'true','openshift_schedulable':'False','cluster': 'rdu10', 'zone': 'us-east-1c'}"
+
+## These are infranodes
+infranode1.rdu10.internal openshift_hostname=infranode1.rdu10.internal  ansible_ssh_user=ec2-user ansible_ssh_private_key_file=~/.ssh/ocpkey.pem openshift_node_labels="{'logging':'true','cluster': 'rdu10', 'env':'infra', 'zone': 'us-east-1c'}"
+infranode2.rdu10.internal openshift_hostname=infranode2.rdu10.internal  ansible_ssh_user=ec2-user ansible_ssh_private_key_file=~/.ssh/ocpkey.pem openshift_node_labels="{'logging':'true','cluster': 'rdu10', 'env':'infra', 'zone': 'us-east-1c'}"
+
+## These are regular nodes
+node1.rdu10.internal openshift_hostname=node1.rdu10.internal  ansible_ssh_user=ec2-user ansible_ssh_private_key_file=~/.ssh/ocpkey.pem openshift_node_labels="{'logging':'true','cluster': 'rdu10', 'env':'app', 'zone': 'us-east-1c'}"
+node2.rdu10.internal openshift_hostname=node2.rdu10.internal  ansible_ssh_user=ec2-user ansible_ssh_private_key_file=~/.ssh/ocpkey.pem openshift_node_labels="{'logging':'true','cluster': 'rdu10', 'env':'app', 'zone': 'us-east-1c'}"
+
+[nfs]
+support1.rdu10.internal openshift_hostname=support1.rdu10.internal  ansible_ssh_user=ec2-user ansible_ssh_private_key_file=~/.ssh/ocpkey.pem
